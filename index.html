@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Game Vault — Choose Your Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #05050d;
+  --clash-a: #9b59f5;
+  --clash-b: #5010a0;
+  --clash-glow: rgba(155,89,245,.55);
+  --poke-a: #FFCB05;
+  --poke-b: #EE1515;
+  --poke-glow: rgba(255,203,5,.55);
+  --txt: #eeeef8;
+  --soft: #8888aa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'Nunito', sans-serif;
+  overflow: hidden;
+}
+
+/* ── LAUNCHER ── */
+#launcher {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  z-index: 10;
+  transition: opacity .4s ease, transform .4s ease;
+}
+
+/* animated star field bg */
+#launcher::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(155,89,245,.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(255,203,5,.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 10%, rgba(61,139,222,.07) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.vault-header {
+  text-align: center;
+  margin-bottom: clamp(20px, 4vh, 40px);
+  position: relative;
+  z-index: 1;
+}
+
+.vault-title {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #fff 30%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.vault-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(.5rem, 2vw, .7rem);
+  letter-spacing: 4px;
+  color: var(--soft);
+  text-transform: uppercase;
+}
+
+/* ── CARDS ROW ── */
+.cards-row {
+  display: flex;
+  gap: clamp(16px, 4vw, 48px);
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card {
+  width: clamp(150px, 40vw, 260px);
+  aspect-ratio: 3/4;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,.08);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-card:hover {
+  transform: translateY(-10px) scale(1.03);
+}
+
+.game-card:active {
+  transform: scale(.96);
+}
+
+/* CLASH card */
+.game-card.clash {
+  background: linear-gradient(145deg, #1a0a30 0%, #0c0018 60%, #06000e 100%);
+}
+
+.game-card.clash:hover {
+  box-shadow: 0 24px 60px rgba(0,0,0,.8), 0 0 40px var(--clash-glow);
+}
+
+/* POKEMON card */
+.game-card.poke {
+  background: linear-gradient(145deg, #1a1500 0%, #110d00 60%, #08060e 100%);
+}
+
+.game-card.poke:hover {
+  box-shadow: 0 24px 60px rgba(0,0,0,.8), 0 0 40px var(--poke-glow);
+}
+
+/* holographic border shimmer */
+.card-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.game-card:hover .card-border { opacity: 1; }
+
+.clash .card-border {
+  background: conic-gradient(from 0deg, #9b59f5, #5010a0, #c060ff, #9b59f5);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 2px;
+  animation: spin 3s linear infinite;
+}
+
+.poke .card-border {
+  background: conic-gradient(from 0deg, #FFCB05, #EE1515, #ffd740, #FFCB05);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 2px;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+/* art area */
+.card-art {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 62%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.card-art-inner {
+  font-size: clamp(4rem, 12vw, 7rem);
+  line-height: 1;
+  filter: drop-shadow(0 4px 20px rgba(0,0,0,.8));
+  transform: scale(1);
+  transition: transform .3s;
+}
+
+.game-card:hover .card-art-inner {
+  transform: scale(1.12) translateY(-4px);
+}
+
+/* art bg glow */
+.clash .card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(155,89,245,.22), transparent 70%);
+}
+
+.poke .card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255,203,5,.18), transparent 70%);
+}
+
+/* card bottom info */
+.card-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 42%;
+  background: linear-gradient(to top, rgba(0,0,0,.95) 60%, transparent);
+  padding: clamp(8px, 2vw, 16px) clamp(10px, 2.5vw, 18px) clamp(14px, 3vw, 22px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  z-index: 2;
+}
+
+.card-game-name {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(.9rem, 3.5vw, 1.5rem);
+  letter-spacing: 1px;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.clash .card-game-name {
+  background: linear-gradient(120deg, #c060ff, #9b59f5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.poke .card-game-name {
+  background: linear-gradient(120deg, #FFCB05, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card-game-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(.35rem, 1.5vw, .52rem);
+  letter-spacing: 2px;
+  color: rgba(255,255,255,.45);
+  text-transform: uppercase;
+  margin-bottom: clamp(8px, 2vw, 14px);
+}
+
+.card-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: clamp(6px, 1.5vw, 10px) 0;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(.5rem, 2vw, .68rem);
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: filter .2s;
+  width: 100%;
+}
+
+.card-play-btn:hover { filter: brightness(1.15); }
+
+.clash .card-play-btn {
+  background: linear-gradient(135deg, #9b59f5, #5010a0);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(155,89,245,.4);
+}
+
+.poke .card-play-btn {
+  background: linear-gradient(135deg, #FFCB05, #e8a800);
+  color: #000;
+  box-shadow: 0 4px 16px rgba(255,203,5,.35);
+}
+
+/* card top badge */
+.card-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  z-index: 3;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(.28rem, 1vw, .38rem);
+  letter-spacing: 2px;
+  padding: 3px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.clash .card-badge {
+  background: rgba(155,89,245,.18);
+  border: 1px solid rgba(155,89,245,.4);
+  color: #c060ff;
+}
+
+.poke .card-badge {
+  background: rgba(255,203,5,.12);
+  border: 1px solid rgba(255,203,5,.35);
+  color: #FFCB05;
+}
+
+/* divider */
+.or-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(255,255,255,.15);
+  font-family: 'Black Ops One', cursive;
+  font-size: .55rem;
+  letter-spacing: 3px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.or-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,.12), transparent);
+}
+
+/* ── GAME FRAME OVERLAY ── */
+#gameOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  background: #000;
+}
+
+#gameOverlay.on { display: flex; }
+
+#gameFrame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* back button */
+#backBtn {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  background: rgba(0,0,0,.75);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 5px 12px 5px 10px;
+  color: rgba(255,255,255,.7);
+  font-family: 'Black Ops One', cursive;
+  font-size: .5rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  transition: all .15s;
+}
+
+#backBtn.on { display: flex; }
+#backBtn:hover { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.3); }
+
+/* loading screen */
+#loadScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: #05050d;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+#loadScreen.on { display: flex; }
+
+.load-ring {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255,255,255,.08);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin2 .8s linear infinite;
+}
+
+@keyframes spin2 { to { transform: rotate(360deg); } }
+
+.load-txt {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: 3px;
+  color: var(--soft);
+  text-transform: uppercase;
+}
+
+/* entrance animations */
+.vault-header { animation: fadeUp .6s ease both; }
+.game-card.clash { animation: fadeUp .6s .15s ease both; }
+.or-divider { animation: fadeUp .6s .2s ease both; }
+.game-card.poke { animation: fadeUp .6s .25s ease both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* particles */
+.particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: float linear infinite;
+  opacity: 0;
+}
+
+@keyframes float {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: .6; }
+  90% { opacity: .2; }
+  100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- LAUNCHER SCREEN -->
+<div id="launcher">
+
+  <div class="vault-header">
+    <div class="vault-title">GAME VAULT</div>
+    <div class="vault-sub">Choose Your Game · Choose Your Battle</div>
+  </div>
+
+  <div class="cards-row">
+
+    <!-- CLASH ROYALE CARD -->
+    <div class="game-card clash" onclick="launchGame('clash')">
+      <div class="card-border"></div>
+      <div class="card-badge">⚔ TRADING CARD GAME</div>
+      <div class="card-art">
+        <div class="card-art-inner">⚔️</div>
+      </div>
+      <div class="card-info">
+        <div class="card-game-name">CLASH ROYALE</div>
+        <div class="card-game-sub">TCG · Deploy · Conquer</div>
+        <button class="card-play-btn">▶ PLAY NOW</button>
+      </div>
+    </div>
+
+    <div class="or-divider">
+      <div class="or-line"></div>
+      OR
+      <div class="or-line"></div>
+    </div>
+
+    <!-- POKEMON CARD -->
+    <div class="game-card poke" onclick="launchGame('poke')">
+      <div class="card-border"></div>
+      <div class="card-badge">⚡ ARENA TCG</div>
+      <div class="card-art">
+        <div class="card-art-inner">⚡</div>
+      </div>
+      <div class="card-info">
+        <div class="card-game-name">POKÉMON ARENA</div>
+        <div class="card-game-sub">TCG · Battle · Catch 'em All</div>
+        <button class="card-play-btn">▶ PLAY NOW</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- BACK BUTTON -->
+<button id="backBtn" onclick="goBack()">← BACK</button>
+
+<!-- LOADING SCREEN -->
+<div id="loadScreen">
+  <div class="load-ring" id="loadRing"></div>
+  <div class="load-txt" id="loadTxt">Loading Game...</div>
+</div>
+
+<!-- GAME FRAME -->
+<div id="gameOverlay">
+  <iframe id="gameFrame" allowfullscreen></iframe>
+</div>
+
+<script>
+// Generate floating particles
+(function() {
+  var colors = ['rgba(155,89,245,.4)', 'rgba(255,203,5,.3)', 'rgba(61,139,222,.3)', 'rgba(255,100,100,.2)'];
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var sz = Math.random() * 4 + 2;
+    p.style.cssText = [
+      'width:' + sz + 'px',
+      'height:' + sz + 'px',
+      'left:' + Math.random() * 100 + 'vw',
+      'background:' + colors[Math.floor(Math.random() * colors.length)],
+      'animation-duration:' + (Math.random() * 12 + 8) + 's',
+      'animation-delay:' + (Math.random() * 10) + 's'
+    ].join(';');
+    document.body.appendChild(p);
+  }
+})();
+
+var gameMap = {
+  clash: 'clash.html',
+  poke:  'pokemon.html'
+};
+
+var loadLabels = {
+  clash: 'Loading Clash Royale TCG...',
+  poke:  'Loading Pokémon Arena...'
+};
+
+var loadColors = {
+  clash: '#9b59f5',
+  poke:  '#FFCB05'
+};
+
+function launchGame(id) {
+  var loadScreen = document.getElementById('loadScreen');
+  var loadTxt    = document.getElementById('loadTxt');
+  var loadRing   = document.getElementById('loadRing');
+  var launcher   = document.getElementById('launcher');
+
+  // Show load screen
+  loadTxt.textContent = loadLabels[id];
+  loadRing.style.borderTopColor = loadColors[id];
+  loadScreen.classList.add('on');
+  launcher.style.opacity = '0';
+  launcher.style.pointerEvents = 'none';
+
+  var frame = document.getElementById('gameFrame');
+  frame.onload = function() {
+    loadScreen.classList.remove('on');
+    document.getElementById('gameOverlay').classList.add('on');
+    document.getElementById('backBtn').classList.add('on');
+  };
+
+  frame.src = gameMap[id];
+}
+
+function goBack() {
+  var frame   = document.getElementById('gameFrame');
+  var overlay = document.getElementById('gameOverlay');
+  var launcher = document.getElementById('launcher');
+  var backBtn  = document.getElementById('backBtn');
+
+  overlay.classList.remove('on');
+  backBtn.classList.remove('on');
+  frame.src = 'about:blank';
+
+  launcher.style.opacity = '1';
+  launcher.style.pointerEvents = '';
+  launcher.style.transform = '';
+}
+</script>
+
+</body>
+</html>
