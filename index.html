@@ -368,7 +368,7 @@ function launchGame(id) {
   var frame = document.getElementById('gameFrame');
   frame.onload = function() {
     loadScreen.classList.remove('on');
-    document.getElementById('gameOverlay').classList.add('on');
+    var _ov=document.getElementById('gameOverlay'); _ov.style.display=''; _ov.classList.add('on');
     document.getElementById('backBtn').classList.add('on');
   };
   frame.src = gameMap[id];
@@ -380,16 +380,22 @@ function goBack() {
   var backBtn = document.getElementById('backBtn');
   var launcher = document.getElementById('launcher');
   var loadScreen = document.getElementById('loadScreen');
-  if(frame) frame.src = 'about:blank';
-  if(overlay) { overlay.classList.remove('on'); overlay.style.display = ''; }
-  if(backBtn) backBtn.classList.remove('on');
+  // Hide overlay immediately - no transition, no flash
+  if(overlay) { overlay.classList.remove('on'); overlay.style.display = 'none'; }
   if(loadScreen) loadScreen.classList.remove('on');
+  if(backBtn) backBtn.classList.remove('on');
+  // Restore launcher instantly (remove transition temporarily)
   if(launcher) {
+    launcher.style.transition = 'none';
     launcher.style.opacity = '1';
     launcher.style.pointerEvents = '';
     launcher.style.transform = '';
-    launcher.style.display = '';
+    launcher.style.display = 'flex';
+    // Re-enable transition after paint so future launches animate properly
+    setTimeout(function(){ launcher.style.transition = ''; }, 50);
   }
+  // Blank the frame after UI is restored so there's no delay
+  if(frame) setTimeout(function(){ frame.src = 'about:blank'; }, 50);
 }
 window.goBack = goBack;
 </script>
