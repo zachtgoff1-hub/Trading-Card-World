@@ -226,7 +226,6 @@ html, body {
 
 /* overlay + frame */
 #gameOverlay {
-  display: none;
   position: fixed; inset: 0; z-index: 100;
   display: none; flex-direction: column; background: #000;
 }
@@ -382,14 +381,14 @@ function goBack() {
   var launcher = document.getElementById('launcher');
   var loadScreen = document.getElementById('loadScreen');
   if(frame) frame.src = 'about:blank';
-  if(overlay) { overlay.classList.remove('on'); overlay.style.display = 'none'; }
+  if(overlay) { overlay.classList.remove('on'); overlay.style.display = ''; }
   if(backBtn) backBtn.classList.remove('on');
   if(loadScreen) loadScreen.classList.remove('on');
   if(launcher) {
     launcher.style.opacity = '1';
     launcher.style.pointerEvents = '';
     launcher.style.transform = '';
-    launcher.style.display = 'flex';
+    launcher.style.display = '';
   }
 }
 window.goBack = goBack;

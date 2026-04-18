@@ -3772,23 +3772,5 @@ setInterval(function(){
 })();
 </script>
 
-<button id="vaultBackBtn" onclick="try{window.parent.goBack();}catch(e){window.location.href='index.html';}" style="display:none;position:fixed;top:10px;left:10px;z-index:9999;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:6px 14px;color:rgba(255,255,255,.75);font-family:'Black Ops One',cursive;font-size:.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">← VAULT</button>
-<script>
-(function(){
-  function _vaultCheck(){
-    var btn = document.getElementById('vaultBackBtn');
-    if(!btn) return;
-    var home = document.getElementById('pg-home');
-    if(!home){ btn.style.display='none'; return; }
-    // Show only on home screen - check pg-home has 'on' and no game page is active
-    var onHome = home.classList.contains('on');
-    // Also make sure no game/play page is active
-    var gameActive = document.getElementById('pg-play') && document.getElementById('pg-play').classList.contains('on');
-    btn.style.display = (onHome && !gameActive) ? 'block' : 'none';
-  }
-  // Check on interval - lightweight since it's just classList check
-  setInterval(_vaultCheck, 300);
-})();
-</script>
 </body>
 </html>
