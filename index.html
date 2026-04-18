@@ -226,6 +226,7 @@ html, body {
 
 /* overlay + frame */
 #gameOverlay {
+  display: none;
   position: fixed; inset: 0; z-index: 100;
   display: none; flex-direction: column; background: #000;
 }
@@ -375,12 +376,21 @@ function launchGame(id) {
 }
 
 function goBack() {
-  document.getElementById('gameFrame').src = 'about:blank';
-  document.getElementById('gameOverlay').classList.remove('on');
-  document.getElementById('backBtn').classList.remove('on');
+  var frame = document.getElementById('gameFrame');
+  var overlay = document.getElementById('gameOverlay');
+  var backBtn = document.getElementById('backBtn');
   var launcher = document.getElementById('launcher');
-  launcher.style.opacity = '1';
-  launcher.style.pointerEvents = '';
+  var loadScreen = document.getElementById('loadScreen');
+  if(frame) frame.src = 'about:blank';
+  if(overlay) { overlay.classList.remove('on'); overlay.style.display = 'none'; }
+  if(backBtn) backBtn.classList.remove('on');
+  if(loadScreen) loadScreen.classList.remove('on');
+  if(launcher) {
+    launcher.style.opacity = '1';
+    launcher.style.pointerEvents = '';
+    launcher.style.transform = '';
+    launcher.style.display = 'flex';
+  }
 }
 window.goBack = goBack;
 </script>
