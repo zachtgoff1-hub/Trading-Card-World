@@ -1753,6 +1753,19 @@ function showEndModal(win){
   var btn=document.getElementById('endModalBtn');
   btn.style.background=win?'linear-gradient(135deg,var(--el),#5820a0)':'linear-gradient(135deg,var(--red),#8a1010)';
   btn.style.color='#fff';
+  var _st=document.getElementById('endModalStats');
+  if(_st&&typeof PG!=='undefined'&&PG.turn){
+    var _tw=(PG.cpu&&PG.cpu.pA&&PG.cpu.pA.fallen?1:0)+(PG.cpu&&PG.cpu.pB&&PG.cpu.pB.fallen?1:0);
+    _st.innerHTML='<div style="margin-top:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;font-family:Share Tech Mono,monospace;font-size:.58rem;display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;text-align:left">'
+      +'<div style="color:rgba(255,255,255,.45)">ROUNDS</div><div style="color:#fff;font-weight:bold">'+PG.turn+'</div>'
+      +'<div style="color:rgba(255,255,255,.45)">TOWERS SMASHED</div><div style="color:#f59e0b;font-weight:bold">'+_tw+'/2</div>'
+      +'<div style="color:rgba(255,255,255,.45)">CLASH STRIKES</div><div style="color:#FFCB05;font-weight:bold">'+(PG._cs||0)+'</div>'
+      +'<div style="color:rgba(255,255,255,.45)">WOUNDS DEALT</div><div style="color:#4ade80;font-weight:bold">'+(PG._wounds||0)+'</div>'
+      +'<div style="color:rgba(255,255,255,.45)">MISSES</div><div style="color:#f87171;font-weight:bold">'+(PG._misses||0)+'</div>'
+      +'<div style="color:rgba(255,255,255,.45)">UNITS DEPLOYED</div><div style="color:#93c5fd;font-weight:bold">'+(PG._deployed||0)+'</div>'
+      +'<div style="color:rgba(255,255,255,.45)">UNITS LOST</div><div style="color:#f87171;font-weight:bold">'+(PG._lost||0)+'</div>'
+      +'</div>';
+  }
   document.getElementById('endModal').classList.add('show');
 }
 </script>
@@ -1932,44 +1945,6 @@ function goHome(id){
   go(id,btn||btns[0]);
 }
 </script>
-
-<style>
-#launcherReturnBtn {
-  position: absolute !important;
-  top: 10px !important;
-  left: 10px !important;
-  z-index: 999 !important;
-  background: rgba(0,0,0,.72) !important;
-  border: 1px solid rgba(255,255,255,.2) !important;
-  border-radius: 16px !important;
-  padding: 5px 10px !important;
-  color: rgba(255,255,255,.75) !important;
-  font-family: "Black Ops One", cursive !important;
-  font-size: .48rem !important;
-  letter-spacing: 1px !important;
-  cursor: pointer !important;
-  width: auto !important;
-  max-width: fit-content !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  backdrop-filter: blur(8px) !important;
-  transition: all .15s !important;
-  white-space: nowrap !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,.5) !important;
-  flex: none !important;
-  min-height: 0 !important;
-  height: auto !important;
-  line-height: normal !important;
-}
-#launcherReturnBtn:hover {
-  background: rgba(255,255,255,.12) !important;
-  border-color: rgba(255,255,255,.4) !important;
-  color: #fff !important;
-}
-/* make pg-home relative so absolute child positions within it */
-#pg-home { position: relative !important; }
-</style>
 </head>
 <body>
 
@@ -1977,7 +1952,7 @@ function goHome(id){
   <div class="end-modal-box" id="endModalBox">
     <div class="end-modal-icon" id="endModalIcon"></div>
     <div class="end-modal-title" id="endModalTitle"></div>
-    <div class="end-modal-sub" id="endModalSub"></div>
+    <div class="end-modal-sub" id="endModalSub"></div><div id="endModalStats" style="width:100%"></div>
     <button class="end-modal-restart" id="endModalBtn" onclick="pgInit();document.getElementById('endModal').classList.remove('show')">▶ Play Again</button>
   </div>
 </div>
@@ -3771,7 +3746,10 @@ body.on-pvp .game-board{overflow:hidden!important;flex:1 1 0!important}
 </nav>
 <div id="actionToast"></div>
 
-<div class="pg on" id="pg-home"><button id="launcherReturnBtn" onclick="try{ window.parent.goBack(); }catch(e){ window.location.href='index.html'; }">⬡ VAULT</button>
+<div class="pg on" id="pg-home">
+<div style="position:absolute;top:10px;left:10px;z-index:50">
+  <button onclick="try{window.parent.goBack();}catch(e){window.location.href='index.html';}" style="background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 13px;color:rgba(255,255,255,.7);font-family:'Black Ops One',cursive;font-size:.5rem;letter-spacing:1px;cursor:pointer;backdrop-filter:blur(8px)">← VAULT</button>
+</div>
 <style>
 #pg-home {
   display:none;
@@ -5252,7 +5230,7 @@ const REQS=[
   {l:'1 Building',f:d=>d.some(c=>c.type==='Building')},
   {l:'1 Fast unit (⚡)',f:d=>d.some(c=>c.speed==='⚡')},
   {l:'2+ Spells',f:d=>d.filter(c=>c.type==='Spell').length>=2},
-  {l:'Exactly 12 cards',f:d=>d.length===12},
+  {l:'Exactly 20 cards',f:d=>d.length===20},
 ];
 let deck=[],eDeck=[];
 var SAVED_DECKS=[null,null,null];
@@ -5381,7 +5359,7 @@ function rnDeck(){
   tryPick(function(c){return c.type==='Spell';},'spell2');
 
   var remaining=shuffle(pool.filter(function(c){return !usedIds.has(c.id);}));
-  var needed=12-picked.length;
+  var needed=20-picked.length;
   for(var i=0;i<remaining.length&&needed>0;i++){
     picked.push(remaining[i]);usedIds.add(remaining[i].id);needed--;
   }
@@ -6179,7 +6157,7 @@ function pvpRoll(){
   if(u.type==='Ranged'){targets=pvpAllUnits(enSide,lane);canTow=(row==='x'||row==='f');}
   else if(u.type==='Building'){targets=PVP[enSide].units['x'+lane].concat(PVP[enSide].units['f'+lane]);canTow=false;}
   else{if(row==='x'){targets=pvpAllUnits(enSide,lane);canTow=true;}else if(row==='f'){targets=PVP[enSide].units['x'+lane].slice();canTow=false;}else{pvpLog('atk',u.name+' out of range');pvpRen();return;}}
-  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=(roll===20),wd=cs?3:w;
+  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=(roll===20),wd=cs?3:w;if(typeof _rhUpdate==="function")_rhUpdate(roll);
   gShowD20((side==='p1'?PVP.p1.name+' ':PVP.p2.name+' ')+u.name,roll,w,cs);
   pvpLog(cs?'cs':w===0?'atk':'dmg',(side==='p1'?PVP.p1.name:PVP.p2.name)+' '+u.name+' D20:'+roll+(cs?' \u26a1 CS!':w===0?' MISS':' = '+wd+'w'));
   if(targets.length){
@@ -6189,7 +6167,7 @@ function pvpRoll(){
     var cpAny=PVP[enSide].pA.fallen||PVP[enSide].pB.fallen;
     var tw=lane==='a'?PVP[enSide].pA:PVP[enSide].pB;
     if(!tw.fallen){tw.w=Math.min(tw.max,tw.w+Math.max(1,wd));pvpLog('tower',u.name+' \u2192 Tower +'+Math.max(1,wd)+'w');if(tw.w>=tw.max){tw.fallen=true;pvpLog('cs','TOWER '+lane.toUpperCase()+' FALLS!');}}
-    else if(cpAny){var kg=PVP[enSide].king;kg.w=Math.min(12,kg.w+Math.max(1,wd));pvpLog('dmg',u.name+' \u2192 KING +'+Math.max(1,wd)+'w');if(kg.w>=(kg.max||12))kg.fallen=true;}
+    else if(cpAny){var kg=PVP[enSide].king;kg.w=Math.min(12,kg.w+Math.max(1,wd));pvpLog('dmg',u.name+' \u2192 KING +'+Math.max(1,wd)+'w');if(kg.w>=12)kg.fallen=true;}
   }
   pvpWin(); if(PVP.phase==='win'){pvpRen();return;}
   pvpRen();
@@ -6474,10 +6452,10 @@ function pvpConfirmRestart(){
 }
 function pgInit(){var _em=document.getElementById('endModal');if(_em)_em.classList.remove('show');
   PG={phase:'player',turn:1,si:-1,sc:null,cq:[],ci:0,_cs:0,_misses:0,_deployed:0,_lost:0,_spells:0,_wounds:0,
-    player:{elixir:2,hand:[],deck:(function(){var pd=ACTIVE_SLOT>=0&&SAVED_DECKS[ACTIVE_SLOT]?SAVED_DECKS[ACTIVE_SLOT].cards:G_PL;return gShuf(pd.concat(pd.slice(0,4)));})(),
+    player:{elixir:2,hand:[],deck:(function(){var pd=ACTIVE_SLOT>=0&&SAVED_DECKS[ACTIVE_SLOT]?SAVED_DECKS[ACTIVE_SLOT].cards:G_PL;var _d=pd.slice(),_i=0;while(_d.length<20){_d.push(pd[_i++%pd.length]);}return gShuf(_d.slice(0,20));})(),
       units:{ba:[],bb:[],fa:[],fb:[],xa:[],xb:[]},
       pA:{w:0,max:8,fallen:false},pB:{w:0,max:8,fallen:false},king:{w:0,max:12,fallen:false}},
-    cpu:{elixir:2,hand:[],deck:(function(){var pd=CPU_SLOT>=0&&P2_DECKS[CPU_SLOT]?P2_DECKS[CPU_SLOT].cards:G_CPU;return gShuf(pd.concat(pd.slice(0,4)));})(),
+    cpu:{elixir:2,hand:[],deck:(function(){var pd=CPU_SLOT>=0&&P2_DECKS[CPU_SLOT]?P2_DECKS[CPU_SLOT].cards:G_CPU;var _d=pd.slice(),_i=0;while(_d.length<20){_d.push(pd[_i++%pd.length]);}return gShuf(_d.slice(0,20));})(),
       units:{ba:[],bb:[],fa:[],fb:[],xa:[],xb:[]},
       pA:{w:0,max:8,fallen:false},pB:{w:0,max:8,fallen:false},king:{w:0,max:12,fallen:false}},
   };
@@ -6593,7 +6571,7 @@ function pgBd(){
   }
 
   var ctrl='';
-  if(PG.phase==='player') ctrl='<div class="game-ctrl-left"><span class="g-phase g-ph-pl">YOUR TURN \u2014 Round '+PG.turn+'</span></div><div class="game-ctrl-right"><button class="g-btn end" onclick="pgEnd()">End Turn \u2192</button></div>';
+  if(PG.phase==='player') ctrl='<div class="game-ctrl-left"><span class="g-phase g-ph-pl">YOUR TURN \u2014 Round '+PG.turn+'</span></div>';
   else if(PG.phase==='combat') ctrl='<div class="game-ctrl-left"><span class="g-phase g-ph-co">COMBAT</span></div><div class="game-ctrl-right"><button class="g-btn roll" onclick="pgRoll()">\u2694 Roll D20!</button></div>';
   else if(PG.phase==='cpu') ctrl='<div class="game-ctrl-left"><span class="g-phase g-ph-cp">CPU TURN</span></div><div class="game-ctrl-right"><button class="g-btn cpu" onclick="pgCpu()">\u25b6 Run CPU Turn</button></div>';
   else if(PG.phase==='win') ctrl='<div class="game-ctrl-left"><span class="g-phase g-ph-wi">\ud83c\udfc6 YOU WIN!</span></div><div class="game-ctrl-right"><button class="g-btn winn" onclick="pgInit()">\u25b6 Play Again</button></div>';
@@ -6613,7 +6591,7 @@ function pgBd(){
 
     +'<div class="pb-tow-row"><div class="pb-tow-zone t1'+(p.pA.fallen?' fz':'')+'">'+gTowCard(p.pA,'A',null)+'</div><div class="pb-vsep"></div><div class="pb-tow-zone t1'+(p.pB.fallen?' fz':'')+'">'+gTowCard(p.pB,'B',null)+'</div></div>'
     +'<div class="pb-king-zone k1">'+gKingCard(p.king,plB,null)+'</div>'
-    +'<div class="pb-strip s1"><span class="pb-pname c1">\ud83d\udfe3 YOU \u00b7 Storm Brigade</span><div class="pb-elx">'+gElxDots(p.elixir)+'</div></div>'
+    +'<div class="pb-strip s1"><span class="pb-pname c1">\ud83d\udfe3 YOU \u00b7 Storm Brigade</span><div class="pb-elx">'+gElxDots(p.elixir)+'<span id=\"_rhB0\" style=\"width:18px;height:18px;border-radius:3px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);display:inline-flex;align-items:center;justify-content:center;font-family:Black Ops One,cursive;font-size:9px;color:rgba(255,255,255,.3);margin-left:auto\">·</span><span id=\"_rhB1\" style=\"width:14px;height:14px;border-radius:3px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);display:inline-flex;align-items:center;justify-content:center;font-family:Black Ops One,cursive;font-size:7px;color:rgba(255,255,255,.2);margin-left:2px\">·</span><span id=\"_rhB2\" style=\"width:11px;height:11px;border-radius:3px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);display:inline-flex;align-items:center;justify-content:center;font-family:Black Ops One,cursive;font-size:6px;color:rgba(255,255,255,.18);margin-left:2px\">·</span><span id=\"_rhDk\" style=\"font-size:.28rem;color:rgba(255,255,255,.3);margin-left:4px;font-family:Share Tech Mono,monospace\"></span></div></div>'
     +'<div class="game-ctrl">'+ctrl+'';
 }
 
@@ -7575,7 +7553,7 @@ function pgRoll(){
       pgBd();return;
     }
   }
-  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=roll===20,wd=cs?3:w;
+  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=roll===20,wd=cs?3:w;if(typeof _rhUpdate==="function")_rhUpdate(roll);
   gShowD20((side==='player'?'Your ':'CPU ')+u.name,roll,w,cs);
   if(cs)snd('cs');else if(w===0)snd('miss');else snd('hit');
   pgLog(cs?'cs':w===0?'atk':'dmg',(side==='player'?'Your ':'CPU ')+u.name+' D20:'+roll+(cs?' \u26a1 CS!':w===0?' MISS':' = '+wd+'w'));
@@ -7648,7 +7626,7 @@ function pgRoll(){
         showDmgPop(_kDmg,side,atkEl);
       })(u);
       pgLog('dmg',u.name+' \u2192 KING +'+_kDmg+'w ('+kg.w+'/'+(kg.max||12)+')');
-      if(kg.w>=(kg.max||12))kg.fallen=true;
+      if(kg.w>=12)kg.fallen=true;
     } else {
       pgLog('tower',u.name+' waits \u2014 both towers must fall first');
     }
@@ -8020,7 +7998,7 @@ function v2Roll(){
   var enWho=side==='alpha'?(lane==='a'?'e1':'e2'):(lane==='a'?'p1':'p2');
   var enAll=v2AllUnits(enWho,lane);
   var target=enAll.length?enAll[0]:null;
-  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=roll===20,wd=cs?3:w;
+  var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=roll===20,wd=cs?3:w;if(typeof _rhUpdate==="function")_rhUpdate(roll);
   gShowD20((side==='alpha'?'Alpha ':'Omega ')+u.name,roll,w,cs);
   v2Log(cs?'cs':w===0?'atk':'dmg',u.name+' D20:'+roll+(cs?' CS!':w===0?' MISS':' = '+wd+'w'));
   if(target){target.w+=wd;v2KC(enWho,lane);}
@@ -8214,7 +8192,7 @@ function storyPgInit(battle){
   cpuCards=cpuCards.slice(0,16);
   var pd=ACTIVE_SLOT>=0&&SAVED_DECKS[ACTIVE_SLOT]?SAVED_DECKS[ACTIVE_SLOT].cards:G_PL;
   PG={phase:'player',turn:1,si:-1,sc:null,cq:[],ci:0,
-    player:{elixir:2,hand:[],deck:gShuf(pd.slice()),_deckSrc:pd,units:{ba:[],bb:[],fa:[],fb:[],xa:[],xb:[]},pA:{w:0,max:8,fallen:false},pB:{w:0,max:8,fallen:false},king:{w:0,max:12,fallen:false}},
+    player:{elixir:2,hand:[],deck:gShuf(pd.slice()),_deckSrc:pd,units:{ba:[],bb:[],fa:[],fb:[],xa:[],xb:[]},pA:{w:0,max:8,fallen:false},pB:{w:0,max:8,fallen:false},king:{w:0,max:battle.kingHP||12,fallen:false}},
     cpu:{elixir:2,hand:[],deck:gShuf(cpuCards.slice()),_deckSrc:cpuCards,units:{ba:[],bb:[],fa:[],fb:[],xa:[],xb:[]},pA:{w:0,max:battle.towerHP||8,fallen:false},pB:{w:0,max:battle.towerHP||8,fallen:false},king:{w:0,max:battle.kingHP||12,fallen:false}},
   };
   PG.player._deckSrc=pd;PG.cpu._deckSrc=cpuCards;
@@ -8768,5 +8746,48 @@ function tutBack(){ tutGo(TUT_STEP-1); }
 </script>
 </div>
 
-
+<script>
+(function(){
+var _h=[];
+function _col(r){return r===20?'#FFCB05':r>=17?'#4ade80':r>=9?'#93c5fd':r>=2?'#fb923c':'#9ca3af';}
+function _repaint(){
+  for(var i=0;i<3;i++){
+    var el=document.getElementById('_rhB'+i);
+    if(!el)continue;
+    var r=_h[i];
+    if(r!==undefined){
+      el.textContent=r;
+      var c=_col(r);
+      el.style.color=c;el.style.borderColor=c;el.style.background='rgba(0,0,0,.3)';
+    } else {
+      el.textContent='·';el.style.color='rgba(255,255,255,.25)';
+      el.style.borderColor='rgba(255,255,255,.15)';el.style.background='rgba(255,255,255,.04)';
+    }
+  }
+  var dk=document.getElementById('_rhDk');
+  if(dk){
+    var n=0;
+    try{
+      if(typeof PG!=='undefined'&&PG.player&&PG.player.deck)n=PG.player.deck.length;
+      else if(typeof G!=='undefined'&&G.p1&&G.p1.deck)n=G.p1.deck.length;
+    }catch(e){}
+    dk.textContent='\U0001f0b7'+n;
+    dk.style.color=n===0?'#ef4444':n<=4?'#f97316':'rgba(255,255,255,.35)';
+  }
+}
+window._rhUpdate=function(roll){
+  _h.unshift(roll);if(_h.length>3)_h.pop();
+  // Schedule repaints at 0ms and 150ms to catch board re-render
+  setTimeout(_repaint,0);setTimeout(_repaint,150);
+};
+// Watch for board re-renders by checking innerHTML length only - no string compare
+var _lastLen=0;
+setInterval(function(){
+  var b=document.getElementById('playBoard')||document.getElementById('boardWrap');
+  if(!b)return;
+  var l=b.innerHTML.length;
+  if(l!==_lastLen){_lastLen=l;if(_h.length>0){_repaint();}}
+},100);
+})();
+</script>
 </body></html>
