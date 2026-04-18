@@ -227,7 +227,7 @@ html, body {
 /* overlay + frame */
 #gameOverlay {
   position: fixed; inset: 0; z-index: 100;
-  display: none; flex-direction: column; background: #000;
+  display: none; flex-direction: column; background: transparent;
 }
 #gameOverlay.on { display: flex; }
 #gameFrame { flex: 1; border: none; width: 100%; height: 100%; display: block; }
@@ -360,6 +360,9 @@ function launchGame(id) {
   var loadTxt    = document.getElementById('loadTxt');
   var loadRing   = document.getElementById('loadRing');
   var launcher   = document.getElementById('launcher');
+  var overlay    = document.getElementById('gameOverlay');
+  // Reset overlay inline style so CSS class can control it again
+  if(overlay) overlay.style.display = '';
   loadTxt.textContent = loadLabels[id];
   loadRing.style.borderTopColor = loadColors[id];
   loadScreen.classList.add('on');
@@ -368,34 +371,38 @@ function launchGame(id) {
   var frame = document.getElementById('gameFrame');
   frame.onload = function() {
     loadScreen.classList.remove('on');
-    var _ov=document.getElementById('gameOverlay'); _ov.style.display=''; _ov.classList.add('on');
+    var _ov=document.getElementById('gameOverlay');
+    if(_ov) { _ov.style.display=''; _ov.classList.add('on'); }
     document.getElementById('backBtn').classList.add('on');
   };
   frame.src = gameMap[id];
 }
 
 function goBack() {
-  var frame = document.getElementById('gameFrame');
+  var frame   = document.getElementById('gameFrame');
   var overlay = document.getElementById('gameOverlay');
   var backBtn = document.getElementById('backBtn');
   var launcher = document.getElementById('launcher');
   var loadScreen = document.getElementById('loadScreen');
-  // Hide overlay immediately - no transition, no flash
-  if(overlay) { overlay.classList.remove('on'); overlay.style.display = 'none'; }
+  // 1. Blank iframe immediately so game disappears
+  if(frame) frame.src = 'about:blank';
+  // 2. Hide overlay and load screen
+  if(overlay)    { overlay.classList.remove('on'); overlay.style.display = 'none'; }
   if(loadScreen) loadScreen.classList.remove('on');
-  if(backBtn) backBtn.classList.remove('on');
-  // Restore launcher instantly (remove transition temporarily)
+  if(backBtn)    backBtn.classList.remove('on');
+  // 3. Show launcher instantly - no transition flash
   if(launcher) {
     launcher.style.transition = 'none';
+    launcher.style.display = 'flex';
     launcher.style.opacity = '1';
     launcher.style.pointerEvents = '';
     launcher.style.transform = '';
-    launcher.style.display = 'flex';
-    // Re-enable transition after paint so future launches animate properly
-    setTimeout(function(){ launcher.style.transition = ''; }, 50);
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        if(launcher) launcher.style.transition = '';
+      });
+    });
   }
-  // Blank the frame after UI is restored so there's no delay
-  if(frame) setTimeout(function(){ frame.src = 'about:blank'; }, 50);
 }
 window.goBack = goBack;
 </script>
