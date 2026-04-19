@@ -351,58 +351,72 @@ html, body {
   }
 })();
 
-var gameMap   = { clash:'clash.html', poke:'pokemon.html' };
+var gameMap    = { clash:'clash.html', poke:'pokemon.html' };
 var loadLabels = { clash:'Loading Clash Royale TCG...', poke:'Loading Pokémon Arena...' };
 var loadColors = { clash:'#9b59f5', poke:'#FFCB05' };
+var _launching = false;
 
 function launchGame(id) {
+  if(_launching) return;
+  _launching = true;
+
   var loadScreen = document.getElementById('loadScreen');
-  var loadTxt    = document.getElementById('loadTxt');
-  var loadRing   = document.getElementById('loadRing');
   var launcher   = document.getElementById('launcher');
   var overlay    = document.getElementById('gameOverlay');
-  // Reset overlay inline style so CSS class can control it again
-  if(overlay) overlay.style.display = '';
-  loadTxt.textContent = loadLabels[id];
-  loadRing.style.borderTopColor = loadColors[id];
+  var frame      = document.getElementById('gameFrame');
+  var backBtn    = document.getElementById('backBtn');
+
+  // Clear any inline style left from goBack so CSS class works
+  overlay.style.display = '';
+
+  // Show load screen, fade launcher
+  document.getElementById('loadTxt').textContent = loadLabels[id];
+  document.getElementById('loadRing').style.borderTopColor = loadColors[id];
   loadScreen.classList.add('on');
   launcher.style.opacity = '0';
   launcher.style.pointerEvents = 'none';
-  var frame = document.getElementById('gameFrame');
+
+  // Clear old onload before setting new src
+  frame.onload = null;
   frame.onload = function() {
+    if(!_launching) return; // goBack was called before load finished
     loadScreen.classList.remove('on');
-    var _ov=document.getElementById('gameOverlay');
-    if(_ov) { _ov.style.display=''; _ov.classList.add('on'); }
-    document.getElementById('backBtn').classList.add('on');
+    overlay.classList.add('on');
+    backBtn.classList.add('on');
+    _launching = false;
   };
   frame.src = gameMap[id];
 }
 
 function goBack() {
-  var frame   = document.getElementById('gameFrame');
-  var overlay = document.getElementById('gameOverlay');
-  var backBtn = document.getElementById('backBtn');
+  _launching = false;
+  var frame    = document.getElementById('gameFrame');
+  var overlay  = document.getElementById('gameOverlay');
+  var backBtn  = document.getElementById('backBtn');
   var launcher = document.getElementById('launcher');
   var loadScreen = document.getElementById('loadScreen');
-  // 1. Blank iframe immediately so game disappears
-  if(frame) frame.src = 'about:blank';
-  // 2. Hide overlay and load screen
-  if(overlay)    { overlay.classList.remove('on'); overlay.style.display = 'none'; }
-  if(loadScreen) loadScreen.classList.remove('on');
-  if(backBtn)    backBtn.classList.remove('on');
-  // 3. Show launcher instantly - no transition flash
-  if(launcher) {
-    launcher.style.transition = 'none';
-    launcher.style.display = 'flex';
-    launcher.style.opacity = '1';
-    launcher.style.pointerEvents = '';
-    launcher.style.transform = '';
+
+  // Kill the onload so blanking the frame doesn't re-trigger it
+  frame.onload = null;
+  frame.src = 'about:blank';
+
+  // Hide overlay immediately
+  overlay.classList.remove('on');
+  overlay.style.display = 'none';
+  loadScreen.classList.remove('on');
+  backBtn.classList.remove('on');
+
+  // Show launcher instantly (disable transition briefly)
+  launcher.style.transition = 'none';
+  launcher.style.display = 'flex';
+  launcher.style.opacity = '1';
+  launcher.style.pointerEvents = '';
+  launcher.style.transform = '';
+  requestAnimationFrame(function(){
     requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        if(launcher) launcher.style.transition = '';
-      });
+      launcher.style.transition = '';
     });
-  }
+  });
 }
 window.goBack = goBack;
 </script>
