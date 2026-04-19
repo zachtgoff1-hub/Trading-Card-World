@@ -2829,6 +2829,7 @@ draw(G.p1); draw(G.p2);
 buildCQ(); G.phase = 'combat';
 G.cq.push({ type: 'towers' }); G.ci = 0;
 render();
+setTimeout(function(){ if (G.phase === 'combat') pgRoll(); }, 600);
 }
 function advance(side) {
 const u = G[side].units;
@@ -2868,8 +2869,8 @@ if (G.ci >= G.cq.length) { pgAfterCombat(); return; }
 const cur = G.cq[G.ci++];
 const { u, side, lane, row } = cur;
 const en = side === 'p1' ? 'p2' : 'p1';
-if (u.frozen) { u.frozen = false; gLog('atk', `${u.name} frozen — skips turn.`); render(); return; }
-if (u._skip) { u._skip = false; gLog('atk', `${u.name} recharging — skips.`); render(); return; }
+if (u.frozen) { u.frozen = false; gLog('atk', `${u.name} frozen — skips turn.`); render(); if (G.phase === 'combat' && G.ci < G.cq.length) setTimeout(pgRoll, 900); return; }
+if (u._skip) { u._skip = false; gLog('atk', `${u.name} recharging — skips.`); render(); if (G.phase === 'combat' && G.ci < G.cq.length) setTimeout(pgRoll, 900); return; }
 let targets = [], canTower = false;
 if (u.gtype === 'Special') {
 if (row === 'b') {
@@ -2887,7 +2888,7 @@ targets = allUnits(en, lane); canTower = targets.length === 0;
 } else if (row === 'f') {
 targets = [...(G[en].units['x'+lane]||[])]; canTower = targets.length === 0;
 } else {
-gLog('atk', `${u.name} (back row) — not in range.`); render(); return;
+gLog('atk', `${u.name} (back row) — not in range.`); render(); if (G.phase === 'combat' && G.ci < G.cq.length) setTimeout(pgRoll, 900); return;
 }
 }
 const roll = d20();if(typeof _rhUpdate==="function")_rhUpdate(roll);
@@ -2921,6 +2922,7 @@ hitTower(side, lane, wd);
 }
 checkWin(); if (G.phase === 'win' || G.phase === 'lose') { render(); return; }
 render();
+if (G.phase === 'combat' && G.ci < G.cq.length) setTimeout(pgRoll, 1100);
 }
 function hitTower(atSide, lane, wd) {
 sfxPlay('towerHit');
@@ -3073,6 +3075,7 @@ checkWin();
 function pgAfterCombat() {
 if (G.phase === 'win' || G.phase === 'lose') return;
 G.phase = 'cpu'; render();
+setTimeout(function(){ if (G.phase === 'cpu') pgCpu(); }, 800);
 }
 function pgCpu() {
 if (G.phase !== 'cpu') return;

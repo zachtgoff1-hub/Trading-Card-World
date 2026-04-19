@@ -3439,6 +3439,7 @@ function pgEnd(){
     all.forEach(function(x){PG.cq.push(x);});
   });
   PG.cq.push({type:'towers'});PG.ci=0;PG.phase='combat';pgRen();
+  setTimeout(function(){if(PG.phase==='combat')pgRoll();},600);
 }
 
 function pgKill(side,lane){
@@ -3894,7 +3895,7 @@ function pgRoll(){
 
   var cur=PG.cq[PG.ci++];
   var u=cur.u,side=cur.side,lane=cur.lane;
-  if(u.frozen){u.frozen=false;pgLog('atk',u.name+' frozen \u2014 skips this turn');pgBd();return;}
+  if(u.frozen){u.frozen=false;pgLog('atk',u.name+' frozen \u2014 skips this turn');pgBd();if(PG.phase==='combat'&&PG.ci<PG.cq.length)setTimeout(pgRoll,900);return;}
 
   var row=cur.row;
   var enSide=side==='player'?'cpu':'player';
@@ -3921,7 +3922,7 @@ function pgRoll(){
     else {
 
       pgLog('atk',u.name+' (back row) out of range \u2014 advance to attack');
-      pgBd();return;
+      pgBd();if(PG.phase==='combat'&&PG.ci<PG.cq.length)setTimeout(pgRoll,900);return;
     }
   }
   var roll=Math.floor(Math.random()*20)+1,w=gWR(roll),cs=roll===20,wd=cs?3:w;if(typeof _rhUpdate==="function")_rhUpdate(roll);
@@ -4008,6 +4009,7 @@ function pgRoll(){
   pgWin();
   if(PG.phase==='win'||PG.phase==='lose'){pgRen();return;}
   pgBd();
+  if(PG.phase==='combat'&&PG.ci<PG.cq.length)setTimeout(pgRoll,1100);
 }
 function pgTow(){
   pgLog('tower','-- Towers fire -- Princess: 1w/turn each lane · King: 2w/turn both lanes --');
@@ -4085,7 +4087,7 @@ function pgTow(){
   }
   pgWin();
 }
-function pgAfter(){if(PG.phase==='win'||PG.phase==='lose')return;PG.cpu.elixir=Math.min(10,PG.cpu.elixir+1);PG.phase='cpu';pgRen();}
+function pgAfter(){if(PG.phase==='win'||PG.phase==='lose')return;PG.cpu.elixir=Math.min(10,PG.cpu.elixir+1);PG.phase='cpu';pgRen();setTimeout(function(){if(PG.phase==='cpu')pgCpu();},800);}
 
 function pgCpu(){
   if(PG.phase!=='cpu')return;gDrw(PG.cpu);var played=false;
